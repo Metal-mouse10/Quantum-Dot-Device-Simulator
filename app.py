@@ -267,26 +267,47 @@ st.markdown(
 # MODEL INFORMATION
 # ============================================================
 
-with st.expander("Model assumptions and future extensions"):
+with st.expander("Model assumptions, limitations and future extensions"):
 
     st.markdown(
         """
         ### Current model
 
-        This simulator uses a reduced-order effective gate-potential
-        model rather than a full three-dimensional Poisson calculation.
+        This simulator models a single electron in a two-dimensional
+        effective gate-defined confinement potential.
 
-        The present calculation describes a single electron using
-        an effective-mass Schrödinger equation.
+        The quantum states are obtained by solving the effective-mass
+        Schrödinger equation using a finite-difference discretization
+        and a sparse eigenvalue solver.
 
-        ### Planned extensions
+        ### Electrostatic model
 
-        - Realistic electrostatic gate geometry
-        - Poisson equation
+        The relationship between the applied gate parameters and the
+        effective potential is phenomenological. The present model does
+        not solve the full three-dimensional electrostatic Poisson
+        equation and is not calibrated to a specific fabricated device.
+
+        Therefore, the gate parameters should be interpreted as
+        effective model parameters rather than experimentally calibrated
+        device voltages.
+
+        ### Physical parameters
+
+        - Device domain: 100 × 100 nm
+        - Semiconductor: GaAs
+        - Electron effective mass: 0.067 mₑ
+        - Single-electron approximation
+        - Two-dimensional finite-difference grid
+
+        ### Future extensions
+
+        - Realistic 3D gate geometry
+        - Electrostatic Poisson solver
         - Self-consistent Schrödinger-Poisson calculation
         - Double quantum dots
         - Tunnel coupling
         - Charge stability diagrams
-        - Realistic device/fabrication geometry
+        - Material and device-specific parameters
+        - Comparison with experimentally calibrated devices
         """
     )

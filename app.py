@@ -179,8 +179,8 @@ with col2:
     st.subheader("Ground-State Probability Density")
 
     psi0 = states[:, 0].reshape(X.shape)
-
-    probability = np.abs(psi0) ** 2
+    dx_nm = (X[0, 1] - X[0, 0]) * 1e9
+    probability = np.abs(psi0) ** 2 / dx_nm**2
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -198,7 +198,7 @@ with col2:
     fig.colorbar(
         mesh,
         ax=ax,
-        label="Probability density"
+        label=r"Probability density (nm$^{-2}$)"
     )
 
     st.pyplot(fig, use_container_width=True)

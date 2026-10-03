@@ -1,10 +1,20 @@
 import numpy as np
 
-from charge_stability import charge_energy
+from charge_stability import (
+    E_C_LEFT,
+    E_C_RIGHT,
+    E_M,
+    ALPHA_LL,
+    ALPHA_LR,
+    ALPHA_RL,
+    ALPHA_RR,
+    charge_energy,
+    induced_charge,
+)
 
 
 # ============================================================
-# CHARGE TRANSITION FUNCTIONS
+# TRANSITION ENERGIES
 # ============================================================
 
 def left_transition_energy(
@@ -14,10 +24,10 @@ def left_transition_energy(
     V_right,
 ):
     """
-    Energy difference for adding one electron
-    to the left dot.
+    Energy required to add one electron to the left dot.
 
-    ΔE_L = E(N_L+1,N_R) - E(N_L,N_R)
+    ΔE_L =
+        E(N_L+1,N_R) - E(N_L,N_R)
     """
 
     return (
@@ -44,10 +54,10 @@ def right_transition_energy(
     V_right,
 ):
     """
-    Energy difference for adding one electron
-    to the right dot.
+    Energy required to add one electron to the right dot.
 
-    ΔE_R = E(N_L,N_R+1) - E(N_L,N_R)
+    ΔE_R =
+        E(N_L,N_R+1) - E(N_L,N_R)
     """
 
     return (
@@ -68,79 +78,88 @@ def right_transition_energy(
 
 
 # ============================================================
-# NUMERICAL SEARCH FOR A TRIPLE POINT
+# ANALYTIC TRIPLE POINT
 # ============================================================
 
 def find_triple_point(
     N_left,
     N_right,
-    V_left_range=(-0.50, -0.05),
-    V_right_range=(-0.50, -0.05),
-    resolution=201,
 ):
     """
-    Find the approximate gate-voltage location where
-    both left and right charge transitions occur.
+    Calculate the triple point analytically.
 
-    This searches for the point minimizing:
+    The triple point satisfies:
 
-        ΔE_L^2 + ΔE_R^2
+        ΔE_L = 0
+        ΔE_R = 0
+
+    First solve for the induced charges
+    (n_g_left, n_g_right), then convert them
+    to gate-control values.
     """
 
-    V_left_values = np.linspace(
-        V_left_range[0],
-        V_left_range[1],
-        resolution,
+    # --------------------------------------------------------
+    # Solve for induced charges
+    # --------------------------------------------------------
+
+    matrix = np.array([
+        [E_C_LEFT, E_M],
+        [E_M, E_C_RIGHT],
+    ])
+
+    rhs = np.array([
+        E_C_LEFT * (N_left + 0.5)
+        + E_M * N_right,
+
+        E_M * N_left
+        + E_C_RIGHT * (N_right + 0.5),
+    ])
+
+    n_g_left, n_g_right = np.linalg.solve(
+        matrix,
+        rhs,
     )
 
-    V_right_values = np.linspace(
-        V_right_range[0],
-        V_right_range[1],
-        resolution,
+
+    # --------------------------------------------------------
+    # Convert induced charge to gate controls
+    #
+    # n_g_left =
+    #   ALPHA_LL*(-V_left)
+    #   + ALPHA_LR*(-V_right)
+    #
+    # n_g_right =
+    #   ALPHA_RL*(-V_left)
+    #   + ALPHA_RR*(-V_right)
+    # --------------------------------------------------------
+
+    gate_matrix = np.array([
+        [ALPHA_LL, ALPHA_LR],
+        [ALPHA_RL, ALPHA_RR],
+    ])
+
+    gate_vector = np.linalg.solve(
+        gate_matrix,
+        np.array([
+            n_g_left,
+            n_g_right,
+        ]),
     )
 
-    best_error = np.inf
-    best_point = None
+    V_left = -gate_vector[0]
+    V_right = -gate_vector[1]
 
-    for V_left in V_left_values:
 
-        for V_right in V_right_values:
-
-            delta_left = left_transition_energy(
-                N_left,
-                N_right,
-                V_left,
-                V_right,
-            )
-
-            delta_right = right_transition_energy(
-                N_left,
-                N_right,
-                V_left,
-                V_right,
-            )
-
-            error = (
-                delta_left**2
-                + delta_right**2
-            )
-
-            if error < best_error:
-
-                best_error = error
-
-                best_point = (
-                    V_left,
-                    V_right,
-                    delta_left,
-                    delta_right,
-                )
-
-    return best_point, best_error
+    return (
+        V_left,
+        V_right,
+        n_g_left,
+        n_g_right,
+    )
 
 
 # ============================================================
-# TEST
+# VERIFY TRIPLE POINT
 # ============================================================
 
 if __name__ == "__main__":
@@ -148,37 +167,73 @@ if __name__ == "__main__":
     N_left = 1
     N_right = 1
 
-    point, error = find_triple_point(
+    (
+        V_left,
+        V_right,
+        n_g_left,
+        n_g_right,
+    ) = find_triple_point(
         N_left,
         N_right,
     )
 
-    V_left, V_right, delta_left, delta_right = point
+
+    delta_left = left_transition_energy(
+        N_left,
+        N_right,
+        V_left,
+        V_right,
+    )
+
+    delta_right = right_transition_energy(
+        N_left,
+        N_right,
+        V_left,
+        V_right,
+    )
+
 
     print()
-    print("Double Quantum Dot Triple-Point Search")
-    print("----------------------------------------")
+    print("Double Quantum Dot Triple Point")
+    print("--------------------------------")
 
     print(
         f"Reference charge state: "
         f"({N_left}, {N_right})"
     )
 
+    print()
+
     print(
-        f"Approximate triple point:"
+        f"Induced charge:"
     )
 
     print(
-        f"V_left  = {V_left:.6f} V"
+        f"n_g_left  = {n_g_left:.8f}"
     )
 
     print(
-        f"V_right = {V_right:.6f} V"
+        f"n_g_right = {n_g_right:.8f}"
     )
 
     print()
+
     print(
-        f"Left transition ΔE = "
+        f"Triple-point gate controls:"
+    )
+
+    print(
+        f"V_left  = {V_left:.8f} V"
+    )
+
+    print(
+        f"V_right = {V_right:.8f} V"
+    )
+
+    print()
+
+    print(
+        f"Left transition ΔE  = "
         f"{delta_left:.6e} meV"
     )
 
@@ -187,7 +242,12 @@ if __name__ == "__main__":
         f"{delta_right:.6e} meV"
     )
 
+    print()
+
     print(
-        f"Search error = "
-        f"{error:.6e}"
+        f"Reference-state energy = "
+        f"{charge_energy("
+        f"N_left, N_right, "
+        f"V_left, V_right"
+        f"):.6e} meV"
     )

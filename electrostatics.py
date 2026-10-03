@@ -146,18 +146,17 @@ def electron_potential_energy(
         gate_depth_nm=gate_depth_nm,
         softening_nm=softening_nm,
     )
-
     U = -e * phi
 
     # Joules -> meV
     U_meV = U / e * 1000.0
+
     # Choose the minimum of the potential as the zero of energy.
-# This removes an arbitrary constant energy offset without
-# changing the quantum-mechanical eigenstates.
+    # This removes an arbitrary constant energy offset without
+    # changing the quantum-mechanical eigenstates.
     U_meV = U_meV - np.min(U_meV)
 
     return U_meV
-
 
 # ============================================================
 # POTENTIAL SUMMARY

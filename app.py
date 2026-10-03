@@ -116,11 +116,11 @@ with st.spinner("Solving quantum dot..."):
     # ELECTROSTATIC POTENTIAL
     # ============================================================
     
-    U_electrostatic_meV = electron_potential_energy(
-        V_left=V_gate1,
-        V_plunger=V_plunger,
-        V_right=V_gate2
-    )
+U_electrostatic_meV = electron_potential_energy(
+    V_left=V_gate1,
+    V_plunger=V_plunger,
+    V_right=V_gate2
+)
 
 
 # Convert energy from joules to meV

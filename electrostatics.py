@@ -23,7 +23,7 @@ X, Y = np.meshgrid(x, y)
 
 def gate_potential(
     V_left=-0.30,
-    V_plunger=-0.20,
+    V_plunger=0.10,
     V_right=-0.30,
     gate_separation_nm=25.0,
     gate_depth_nm=20.0,
@@ -121,7 +121,7 @@ def gate_potential(
 
 def electron_potential_energy(
     V_left=-0.30,
-    V_plunger=-0.20,
+    V_plunger=0.10,
     V_right=-0.30,
     gate_separation_nm=25.0,
     gate_depth_nm=20.0,
@@ -164,7 +164,7 @@ def electron_potential_energy(
 
 def summarize_potential(
     V_left=-0.30,
-    V_plunger=-0.20,
+    V_plunger=0.10,
     V_right=-0.30,
     gate_separation_nm=25.0,
     gate_depth_nm=20.0,

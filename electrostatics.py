@@ -198,13 +198,10 @@ def summarize_potential(
     )
 
     U_meV = electron_potential_energy(
-        V_left=V_left,
-        V_plunger=V_plunger,
-        V_right=V_right,
+        V_left=-0.30,
+        V_plunger=0.10,
+        V_right=-0.30,
         transverse_strength=80.0,
-        gate_separation_nm=gate_separation_nm,
-        gate_depth_nm=gate_depth_nm,
-        softening_nm=softening_nm,
     )
 
     return {

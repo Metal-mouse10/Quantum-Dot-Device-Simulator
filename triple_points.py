@@ -244,10 +244,13 @@ if __name__ == "__main__":
 
     print()
 
+    reference_energy = charge_energy(
+    N_left,
+    N_right,
+    V_left,
+    V_right,
+)
+
     print(
         f"Reference-state energy = "
-        f"{charge_energy("
-        f"N_left, N_right, "
-        f"V_left, V_right"
-        f"):.6e} meV"
-    )
+        f"{reference_energy:.6e} meV")

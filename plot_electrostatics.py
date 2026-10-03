@@ -102,3 +102,36 @@ plt.savefig(
 )
 
 plt.show()
+
+# ============================================================
+# SHIFTED ELECTRON POTENTIAL ENERGY
+# ============================================================
+
+plt.figure(figsize=(7, 6))
+
+plt.pcolormesh(
+    X_nm,
+    Y_nm,
+    U_meV,
+    shading="auto",
+)
+
+plt.colorbar(
+    label="Electron potential energy (meV)"
+)
+
+plt.xlabel("x (nm)")
+plt.ylabel("y (nm)")
+
+plt.title(
+    "Finite-Depth Electrostatic Confinement Potential"
+)
+
+plt.tight_layout()
+
+plt.savefig(
+    "electron_potential_energy.png",
+    dpi=300,
+)
+
+plt.show()

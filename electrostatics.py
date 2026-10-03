@@ -201,7 +201,6 @@ def summarize_potential(
         V_left=-0.30,
         V_plunger=0.10,
         V_right=-0.30,
-        transverse_strength=80.0,
     )
 
     return {

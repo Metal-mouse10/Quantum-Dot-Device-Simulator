@@ -126,6 +126,7 @@ def electron_potential_energy(
     gate_separation_nm=25.0,
     gate_depth_nm=20.0,
     softening_nm=2.0,
+    transverse_strength=80.0
 ):
     """
     Convert the effective electrostatic potential into
@@ -150,6 +151,16 @@ def electron_potential_energy(
 
     # Joules -> meV
     U_meV = U / e * 1000.0
+        # ============================================================
+    # EFFECTIVE TRANSVERSE CONFINEMENT
+    # ============================================================
+    
+    U_transverse = (
+        transverse_strength
+        * (Y / (Ly / 2)) ** 2
+    )
+    
+    U_meV = U_meV + U_transverse
 
     # Choose the minimum of the potential as the zero of energy.
     # This removes an arbitrary constant energy offset without
@@ -157,6 +168,8 @@ def electron_potential_energy(
     U_meV = U_meV - np.min(U_meV)
 
     return U_meV
+
+
 
 # ============================================================
 # POTENTIAL SUMMARY

@@ -2,147 +2,98 @@ import numpy as np
 
 
 # ============================================================
-# PHYSICAL CONSTANTS
+# ENERGY SCALES
 # ============================================================
 
-e = 1.602176634e-19
+# Effective charging energies.
+# These are model parameters, not experimentally calibrated.
 
+E_C_LEFT = 5.0       # meV
+E_C_RIGHT = 5.0      # meV
 
-# ============================================================
-# DOUBLE-DOT CAPACITANCE MODEL
-# ============================================================
-
-# Effective capacitances
-#
-# These are model parameters, not experimentally calibrated
-# device values.
-
-C_L = 10e-18       # Left dot total capacitance
-C_R = 10e-18       # Right dot total capacitance
-C_m = 2e-18        # Mutual capacitance
+# Mutual capacitive coupling energy
+E_M = 0.8             # meV
 
 
 # ============================================================
-# CHARGING ENERGY
+# GATE COUPLING
 # ============================================================
 
-def charging_energy(
+# Effective conversion from gate-control parameter to
+# dimensionless induced charge.
+
+ALPHA_LEFT = 5.0
+ALPHA_RIGHT = 5.0
+
+
+# ============================================================
+# GATE-INDUCED CHARGE
+# ============================================================
+
+def induced_charge(V_left, V_right):
+    """
+    Convert effective gate-control parameters into
+    dimensionless induced charges.
+
+    These are phenomenological parameters.
+
+    Returns
+    -------
+    n_g_left : float
+    n_g_right : float
+    """
+
+    n_g_left = ALPHA_LEFT * (-V_left)
+    n_g_right = ALPHA_RIGHT * (-V_right)
+
+    return n_g_left, n_g_right
+
+
+# ============================================================
+# CHARGE CONFIGURATION ENERGY
+# ============================================================
+
+def charge_energy(
     N_left,
     N_right,
     V_left,
     V_right,
 ):
     """
-    Calculate the electrostatic energy of a double-dot
-    charge configuration using a constant-interaction model.
+    Calculate the constant-interaction energy of a
+    double-dot charge configuration.
 
-    Parameters
-    ----------
-    N_left : int
-        Number of excess electrons on the left dot.
-
-    N_right : int
-        Number of excess electrons on the right dot.
-
-    V_left : float
-        Left gate control parameter in volts.
-
-    V_right : float
-        Right gate control parameter in volts.
-
-    Returns
-    -------
-    energy : float
-        Electrostatic energy in joules.
-
-    Notes
-    -----
-    This is a simplified constant-interaction model.
-
-    The capacitances and gate couplings are effective model
-    parameters and are not experimentally calibrated.
+    Energy returned in meV.
     """
 
-    # --------------------------------------------------------
-    # Gate-induced charge
-    # --------------------------------------------------------
+    n_g_left, n_g_right = induced_charge(
+        V_left,
+        V_right,
+    )
 
-    Q_left = C_L * V_left
-    Q_right = C_R * V_right
+    delta_left = N_left - n_g_left
+    delta_right = N_right - n_g_right
 
-    # Convert electron numbers into charge
-    q_left = -N_left * e
-    q_right = -N_right * e
-
-    # Effective charge relative to gate-induced charge
-    delta_Q_left = q_left - Q_left
-    delta_Q_right = q_right - Q_right
-
-    # --------------------------------------------------------
-    # Capacitance matrix
-    # --------------------------------------------------------
-
-    C_matrix = np.array([
-        [C_L + C_m, -C_m],
-        [-C_m, C_R + C_m]
-    ])
-
-    # Inverse capacitance matrix
-    C_inverse = np.linalg.inv(C_matrix)
-
-    # Charge vector
-    delta_Q = np.array([
-        delta_Q_left,
-        delta_Q_right
-    ])
-
-    # --------------------------------------------------------
-    # Electrostatic energy
-    #
-    # E = 1/2 Q^T C^-1 Q
-    # --------------------------------------------------------
-
-    energy = 0.5 * delta_Q @ C_inverse @ delta_Q
+    energy = (
+        0.5 * E_C_LEFT * delta_left**2
+        + 0.5 * E_C_RIGHT * delta_right**2
+        + E_M * delta_left * delta_right
+    )
 
     return energy
 
 
 # ============================================================
-# CONVERT JOULES → meV
-# ============================================================
-
-def joule_to_meV(energy):
-    """
-    Convert energy from joules to meV.
-    """
-
-    return energy / e * 1000.0
-
-
-# ============================================================
-# FIND LOWEST-ENERGY CHARGE CONFIGURATION
+# FIND GROUND CHARGE STATE
 # ============================================================
 
 def find_ground_charge_state(
     V_left,
     V_right,
-    max_electrons=3,
+    max_electrons=5,
 ):
     """
     Find the lowest-energy charge configuration.
-
-    Searches:
-
-        N_left  = 0 ... max_electrons
-        N_right = 0 ... max_electrons
-
-    Returns
-    -------
-    ground_state : tuple
-        (N_left, N_right)
-
-    ground_energy : float
-        Ground-state energy in joules.
     """
 
     lowest_energy = np.inf
@@ -152,7 +103,7 @@ def find_ground_charge_state(
 
         for N_right in range(max_electrons + 1):
 
-            energy = charging_energy(
+            energy = charge_energy(
                 N_left=N_left,
                 N_right=N_right,
                 V_left=V_left,
@@ -165,14 +116,14 @@ def find_ground_charge_state(
 
                 ground_state = (
                     N_left,
-                    N_right
+                    N_right,
                 )
 
     return ground_state, lowest_energy
 
 
 # ============================================================
-# SIMPLE TEST
+# TEST
 # ============================================================
 
 if __name__ == "__main__":
@@ -183,16 +134,22 @@ if __name__ == "__main__":
     state, energy = find_ground_charge_state(
         V_left=V_left,
         V_right=V_right,
-        max_electrons=3,
+        max_electrons=5,
     )
 
     print("\nDouble Quantum Dot Charge Model")
     print("--------------------------------")
 
     print(
-        f"Gate controls:"
-        f" V_left = {V_left:.2f} V,"
-        f" V_right = {V_right:.2f} V"
+        f"Gate controls: "
+        f"V_left = {V_left:.2f} V, "
+        f"V_right = {V_right:.2f} V"
+    )
+
+    print(
+        f"Induced charges: "
+        f"n_g_left = {induced_charge(V_left, V_right)[0]:.3f}, "
+        f"n_g_right = {induced_charge(V_left, V_right)[1]:.3f}"
     )
 
     print(
@@ -201,6 +158,5 @@ if __name__ == "__main__":
     )
 
     print(
-        f"Energy = "
-        f"{joule_to_meV(energy):.6f} meV"
+        f"Energy = {energy:.6f} meV"
     )

@@ -9,7 +9,11 @@ from quantum_dot import (
     eV
 )
 
-
+from electrostatics import (
+    X as X_electrostatic,
+    Y as Y_electrostatic,
+    electron_potential_energy
+)
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
@@ -108,6 +112,15 @@ with st.spinner("Solving quantum dot..."):
         V_gate2=V_gate2,
         num_states=num_states
     )
+    # ============================================================
+    # ELECTROSTATIC POTENTIAL
+    # ============================================================
+    
+    U_electrostatic_meV = electron_potential_energy(
+        V_left=V_gate1,
+        V_plunger=V_plunger,
+        V_right=V_gate2
+    )
 
 
 # Convert energy from joules to meV
@@ -204,6 +217,60 @@ with col2:
     st.pyplot(fig, use_container_width=True)
 
     plt.close(fig)
+
+# ============================================================
+# ELECTROSTATIC POTENTIAL
+# ============================================================
+
+st.divider()
+
+st.subheader("Electrostatic Potential")
+
+st.markdown(
+    """
+    The applied gate voltages are mapped onto an effective
+    electrostatic potential at the semiconductor plane.
+    """
+)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+mesh = ax.pcolormesh(
+    X_electrostatic * 1e9,
+    Y_electrostatic * 1e9,
+    U_electrostatic_meV,
+    shading="auto"
+)
+
+ax.set_xlabel("x (nm)")
+ax.set_ylabel("y (nm)")
+ax.set_title("Effective Electrostatic Electron Potential")
+
+fig.colorbar(
+    mesh,
+    ax=ax,
+    label="Energy (meV)"
+)
+
+st.pyplot(fig, use_container_width=True)
+
+plt.close(fig)
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    "Minimum potential",
+    f"{np.min(U_electrostatic_meV):.2f} meV"
+)
+
+col2.metric(
+    "Maximum potential",
+    f"{np.max(U_electrostatic_meV):.2f} meV"
+)
+
+col3.metric(
+    "Grid",
+    f"{U_electrostatic_meV.shape[0]} × {U_electrostatic_meV.shape[1]}"
+)
 
 
 # ============================================================

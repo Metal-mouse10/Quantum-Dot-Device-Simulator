@@ -1,8 +1,8 @@
 # Quantum Dot Device Simulator
 
-An interactive numerical simulator for a gate-defined semiconductor quantum dot, connecting device-level gate voltages to an effective confinement potential and the resulting quantum-mechanical energy states.
+An interactive numerical simulator for a gate-defined semiconductor quantum dot, connecting effective gate controls to a confinement potential and the resulting quantum-mechanical states.
 
-The project combines semiconductor device concepts, numerical quantum mechanics, and scientific computing in Python.
+The project combines semiconductor device concepts, numerical quantum mechanics, charge-state modeling, and scientific computing in Python.
 
 ---
 
@@ -10,19 +10,28 @@ The project combines semiconductor device concepts, numerical quantum mechanics,
 
 Quantum dots are nanoscale semiconductor structures in which charge carriers are confined in space, producing discrete quantum energy levels.
 
-This project develops a computational model of a **single-electron gate-defined quantum dot**. The simulator takes effective gate voltages as inputs, constructs a model confinement potential, and solves the two-dimensional time-independent Schrödinger equation to obtain the lowest-energy quantum states.
+This project develops a computational framework for studying **gate-defined semiconductor quantum dots**. The current implementation contains models for:
 
-The goal is to build a bridge between:
+- Single quantum-dot confinement
+- Double quantum dots
+- Quantum-state energy spectra
+- Ground-state wavefunctions and probability densities
+- Gate-controlled detuning
+- Tunnel-splitting behavior
+- Charge stability diagrams
+- Triple-point identification and validation
 
-**Gate voltages → Device potential → Quantum Hamiltonian → Energy spectrum → Wavefunctions**
+The long-term goal is to build a computational bridge between:
 
-The current implementation uses an effective reduced-order electrostatic model and a finite-difference Schrödinger solver.
+**Gate geometry / controls → Electrostatic potential → Quantum Hamiltonian → Energy spectrum → Wavefunctions → Charge states**
+
+The present implementation is being developed incrementally, starting from reduced-order effective models and progressing toward more physically explicit electrostatic modeling.
 
 ---
 
 ## Current Model
 
-The simulated device consists of three effective gates:
+The initial single-dot simulator uses three effective gate controls:
 
 ```text
 Barrier 1       Plunger       Barrier 2

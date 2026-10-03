@@ -117,6 +117,10 @@ def test_plunger_response():
 # TEST 4 — ELECTROSTATIC POTENTIAL → ELECTRON ENERGY
 # ============================================================
 
+# ============================================================
+# TEST 4 — ELECTROSTATIC POTENTIAL → ELECTRON ENERGY
+# ============================================================
+
 def test_energy_conversion():
 
     phi = gate_potential(
@@ -135,13 +139,19 @@ def test_energy_conversion():
     #
     # U = -e * phi
     #
-    # Converting joules to meV means:
+    # Converting to meV:
     #
     # U_meV = -phi * 1000
     #
-    # because 1 eV corresponds to 1 V × e.
+    # The potential energy is then shifted so that its
+    # minimum is defined as zero.
 
     expected_U_meV = -phi * 1000.0
+
+    expected_U_meV = (
+        expected_U_meV
+        - np.min(expected_U_meV)
+    )
 
     conversion_error = np.max(
         np.abs(U_meV - expected_U_meV)

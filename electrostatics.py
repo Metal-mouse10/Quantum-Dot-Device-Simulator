@@ -126,7 +126,7 @@ def electron_potential_energy(
     gate_separation_nm=25.0,
     gate_depth_nm=20.0,
     softening_nm=2.0,
-    transverse_strength=80.0
+    transverse_strength=0.0
 ):
     """
     Convert the effective electrostatic potential into
@@ -201,6 +201,7 @@ def summarize_potential(
         V_left=V_left,
         V_plunger=V_plunger,
         V_right=V_right,
+        transverse_strength=80.0,
         gate_separation_nm=gate_separation_nm,
         gate_depth_nm=gate_depth_nm,
         softening_nm=softening_nm,

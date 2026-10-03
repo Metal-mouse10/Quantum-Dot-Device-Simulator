@@ -1,187 +1,149 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
+from charge_stability import find_ground_charge_state
 
 
 # ============================================================
-# ENERGY SCALES
+# GATE-VOLTAGE RANGE
 # ============================================================
 
-# Effective charging energies.
-# These are model parameters, not experimentally calibrated.
-
-E_C_LEFT = 5.0       # meV
-E_C_RIGHT = 5.0      # meV
-
-# Mutual capacitive coupling energy
-E_M = 0.8             # meV
+V_left_values = np.linspace(-0.05, -0.50, 101)
+V_right_values = np.linspace(-0.05, -0.50, 101)
 
 
 # ============================================================
-# GATE COUPLING
+# STORAGE
 # ============================================================
 
-# Direct gate-to-dot coupling
-ALPHA_LL = 5.0        # Left gate -> Left dot
-ALPHA_RR = 5.0        # Right gate -> Right dot
+N_left_map = np.zeros(
+    (len(V_right_values), len(V_left_values)),
+    dtype=int
+)
 
-# Cross-capacitance
-# A gate also weakly influences the opposite dot.
-ALPHA_LR = 0.8        # Right gate -> Left dot
-ALPHA_RL = 0.8        # Left gate -> Right dot
+N_right_map = np.zeros(
+    (len(V_right_values), len(V_left_values)),
+    dtype=int
+)
 
 
 # ============================================================
-# GATE-INDUCED CHARGE
+# CHARGE-STABILITY CALCULATION
 # ============================================================
 
-def induced_charge(V_left, V_right):
-    """
-    Calculate dimensionless gate-induced charges.
+for i, V_right in enumerate(V_right_values):
 
-    The model includes both direct and cross-capacitance:
+    for j, V_left in enumerate(V_left_values):
 
-        n_g_left =
-            ALPHA_LL * (-V_left)
-            + ALPHA_LR * (-V_right)
+        state, energy = find_ground_charge_state(
+            V_left=V_left,
+            V_right=V_right,
+            max_electrons=6,
+        )
 
-        n_g_right =
-            ALPHA_RR * (-V_right)
-            + ALPHA_RL * (-V_left)
+        N_left_map[i, j] = state[0]
+        N_right_map[i, j] = state[1]
 
-    These coupling parameters are phenomenological and are
-    not experimentally calibrated.
-    """
 
-    n_g_left = (
-        ALPHA_LL * (-V_left)
-        + ALPHA_LR * (-V_right)
+# ============================================================
+# ENCODE CHARGE CONFIGURATION
+# ============================================================
+
+charge_map = 10 * N_left_map + N_right_map
+
+
+# ============================================================
+# PLOT
+# ============================================================
+
+plt.figure(figsize=(8, 7))
+
+unique_states = sorted(np.unique(charge_map))
+
+image = plt.imshow(
+    charge_map,
+    origin="lower",
+    extent=[
+        V_left_values[0],
+        V_left_values[-1],
+        V_right_values[0],
+        V_right_values[-1],
+    ],
+    aspect="equal",
+    interpolation="nearest",
+    cmap="viridis",
+)
+
+
+plt.xlabel("Left-dot gate control (V)")
+plt.ylabel("Right-dot gate control (V)")
+
+plt.title(
+    "Double Quantum Dot Charge Stability Diagram"
+)
+
+
+# ============================================================
+# LABEL CHARGE REGIONS
+# ============================================================
+
+for state_code in unique_states:
+
+    mask = charge_map == state_code
+
+    rows, cols = np.where(mask)
+
+    if len(rows) == 0:
+        continue
+
+    row_center = int(np.mean(rows))
+    col_center = int(np.mean(cols))
+
+    V_left_center = V_left_values[col_center]
+    V_right_center = V_right_values[row_center]
+
+    N_left = state_code // 10
+    N_right = state_code % 10
+
+    plt.text(
+        V_left_center,
+        V_right_center,
+        f"({N_left},{N_right})",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="white",
+        fontweight="bold",
     )
 
-    n_g_right = (
-        ALPHA_RR * (-V_right)
-        + ALPHA_RL * (-V_left)
-    )
-
-    return n_g_left, n_g_right
-
 
 # ============================================================
-# CHARGE CONFIGURATION ENERGY
+# REPORT STATES
 # ============================================================
 
-def charge_energy(
-    N_left,
-    N_right,
-    V_left,
-    V_right,
-):
-    """
-    Calculate the constant-interaction energy of a
-    double-dot charge configuration.
+print()
+print("Charge configurations present")
+print("--------------------------------")
 
-    Energy returned in meV.
-    """
+for state_code in unique_states:
 
-    n_g_left, n_g_right = induced_charge(
-        V_left,
-        V_right,
-    )
-
-    delta_left = N_left - n_g_left
-    delta_right = N_right - n_g_right
-
-    energy = (
-        0.5 * E_C_LEFT * delta_left**2
-        + 0.5 * E_C_RIGHT * delta_right**2
-        + E_M * delta_left * delta_right
-    )
-
-    return energy
-
-
-# ============================================================
-# FIND GROUND CHARGE STATE
-# ============================================================
-
-def find_ground_charge_state(
-    V_left,
-    V_right,
-    max_electrons=6,
-):
-    """
-    Find the lowest-energy charge configuration.
-
-    If multiple configurations are exactly degenerate
-    within numerical tolerance, the first one encountered
-    is returned.
-    """
-
-    lowest_energy = np.inf
-    ground_state = None
-
-    for N_left in range(max_electrons + 1):
-
-        for N_right in range(max_electrons + 1):
-
-            energy = charge_energy(
-                N_left=N_left,
-                N_right=N_right,
-                V_left=V_left,
-                V_right=V_right,
-            )
-
-            if energy < lowest_energy - 1e-12:
-
-                lowest_energy = energy
-
-                ground_state = (
-                    N_left,
-                    N_right,
-                )
-
-    return ground_state, lowest_energy
-
-
-# ============================================================
-# TEST
-# ============================================================
-
-if __name__ == "__main__":
-
-    V_left = -0.20
-    V_right = -0.20
-
-    state, energy = find_ground_charge_state(
-        V_left=V_left,
-        V_right=V_right,
-        max_electrons=6,
-    )
-
-    n_g_left, n_g_right = induced_charge(
-        V_left,
-        V_right,
-    )
-
-    print()
-    print("Double Quantum Dot Charge Model")
-    print("--------------------------------")
+    N_left = state_code // 10
+    N_right = state_code % 10
 
     print(
-        f"Gate controls: "
-        f"V_left = {V_left:.2f} V, "
-        f"V_right = {V_right:.2f} V"
+        f"({N_left}, {N_right})"
     )
 
-    print(
-        f"Induced charges: "
-        f"n_g_left = {n_g_left:.3f}, "
-        f"n_g_right = {n_g_right:.3f}"
-    )
 
-    print(
-        f"Ground charge state: "
-        f"(N_left, N_right) = {state}"
-    )
+plt.tight_layout()
 
-    print(
-        f"Energy = {energy:.6f} meV"
-    )
+plt.savefig(
+    "charge_stability_diagram.png",
+    dpi=300,
+    bbox_inches="tight",
+)
+
+plt.show()
+
+print()
+print("Saved: charge_stability_diagram.png")

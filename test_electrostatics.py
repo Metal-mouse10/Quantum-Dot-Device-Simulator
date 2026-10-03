@@ -120,6 +120,43 @@ def test_plunger_response():
 # ============================================================
 # TEST 4 — ELECTROSTATIC POTENTIAL → ELECTRON ENERGY
 # ============================================================
+def test_central_confinement():
+
+    U_meV = electron_potential_energy(
+        V_left=-0.30,
+        V_plunger=0.10,
+        V_right=-0.30,
+    )
+
+    center_x = np.argmin(np.abs(X[0, :] - 0.0))
+
+    left_x = np.argmin(
+        np.abs(X[0, :] - (-25e-9))
+    )
+
+    right_x = np.argmin(
+        np.abs(X[0, :] - 25e-9)
+    )
+
+    center_y = np.argmin(
+        np.abs(Y[:, 0] - 0.0)
+    )
+
+    U_center = U_meV[center_y, center_x]
+    U_left = U_meV[center_y, left_x]
+    U_right = U_meV[center_y, right_x]
+
+    print("\nTEST 6 — Central confinement")
+    print("-----------------------------")
+    print(f"Center potential:      {U_center:.6f} meV")
+    print(f"Left barrier:          {U_left:.6f} meV")
+    print(f"Right barrier:         {U_right:.6f} meV")
+
+    assert U_center < U_left
+    assert U_center < U_right
+
+    print("Central region is lower in energy than both barriers")
+    print("PASS")
 
 def test_energy_conversion():
 
@@ -213,7 +250,7 @@ if __name__ == "__main__":
     test_plunger_response()
     test_energy_conversion()
     test_finite_values()
-
+    test_central_confinement()
     print("\n==========================================")
     print("ALL ELECTROSTATICS TESTS PASSED")
     print("==========================================")

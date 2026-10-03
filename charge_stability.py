@@ -19,11 +19,14 @@ E_M = 0.8             # meV
 # GATE COUPLING
 # ============================================================
 
-# Effective conversion from gate-control parameter to
-# dimensionless induced charge.
+# Direct gate-to-dot coupling
+ALPHA_LL = 5.0        # Left gate -> Left dot
+ALPHA_RR = 5.0        # Right gate -> Right dot
 
-ALPHA_LEFT = 5.0
-ALPHA_RIGHT = 5.0
+# Cross-capacitance
+# A gate also weakly influences the opposite dot.
+ALPHA_LR = 0.8        # Right gate -> Left dot
+ALPHA_RL = 0.8        # Left gate -> Right dot
 
 
 # ============================================================
@@ -32,19 +35,31 @@ ALPHA_RIGHT = 5.0
 
 def induced_charge(V_left, V_right):
     """
-    Convert effective gate-control parameters into
-    dimensionless induced charges.
+    Calculate dimensionless gate-induced charges.
 
-    These are phenomenological parameters.
+    The model includes both direct and cross-capacitance:
 
-    Returns
-    -------
-    n_g_left : float
-    n_g_right : float
+        n_g_left =
+            ALPHA_LL * (-V_left)
+            + ALPHA_LR * (-V_right)
+
+        n_g_right =
+            ALPHA_RR * (-V_right)
+            + ALPHA_RL * (-V_left)
+
+    These coupling parameters are phenomenological and are
+    not experimentally calibrated.
     """
 
-    n_g_left = ALPHA_LEFT * (-V_left)
-    n_g_right = ALPHA_RIGHT * (-V_right)
+    n_g_left = (
+        ALPHA_LL * (-V_left)
+        + ALPHA_LR * (-V_right)
+    )
+
+    n_g_right = (
+        ALPHA_RR * (-V_right)
+        + ALPHA_RL * (-V_left)
+    )
 
     return n_g_left, n_g_right
 
@@ -90,10 +105,14 @@ def charge_energy(
 def find_ground_charge_state(
     V_left,
     V_right,
-    max_electrons=5,
+    max_electrons=6,
 ):
     """
     Find the lowest-energy charge configuration.
+
+    If multiple configurations are exactly degenerate
+    within numerical tolerance, the first one encountered
+    is returned.
     """
 
     lowest_energy = np.inf
@@ -110,7 +129,7 @@ def find_ground_charge_state(
                 V_right=V_right,
             )
 
-            if energy < lowest_energy:
+            if energy < lowest_energy - 1e-12:
 
                 lowest_energy = energy
 
@@ -134,10 +153,16 @@ if __name__ == "__main__":
     state, energy = find_ground_charge_state(
         V_left=V_left,
         V_right=V_right,
-        max_electrons=5,
+        max_electrons=6,
     )
 
-    print("\nDouble Quantum Dot Charge Model")
+    n_g_left, n_g_right = induced_charge(
+        V_left,
+        V_right,
+    )
+
+    print()
+    print("Double Quantum Dot Charge Model")
     print("--------------------------------")
 
     print(
@@ -148,8 +173,8 @@ if __name__ == "__main__":
 
     print(
         f"Induced charges: "
-        f"n_g_left = {induced_charge(V_left, V_right)[0]:.3f}, "
-        f"n_g_right = {induced_charge(V_left, V_right)[1]:.3f}"
+        f"n_g_left = {n_g_left:.3f}, "
+        f"n_g_right = {n_g_right:.3f}"
     )
 
     print(
